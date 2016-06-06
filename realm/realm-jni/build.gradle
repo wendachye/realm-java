@@ -23,7 +23,7 @@ ext.buildTargetAbis = project.hasProperty('buildTargetABIs') ? project.getProper
 def commonCflags = [ '-Os', '-std=c++14' ]
 // LTO and debugging don't play well together
 if (!ext.debugBuild) {
-    commonCflags += [ '-flto', '-fvisibility=hidden', '-ffunction-sections', '-fdata-sections' ]
+    commonCflags += [ '-fvisibility=hidden', '-ffunction-sections', '-fdata-sections' ]
 }
 
 enum Compiler {
@@ -67,7 +67,7 @@ class Target {
 
 // We are using gcc 4.9 for all architectures
 def toolchains = [
-    new Toolchain( name:'arm', fullName:'arm-linux-androideabi', commandPrefix:'arm-linux-androideabi', version:[ (Compiler.GCC):'4.9', (Compiler.CLANG):'3.6' ], platform:8 ),
+    new Toolchain( name:'arm', fullName:'arm-linux-androideabi', commandPrefix:'arm-linux-androideabi', version:[ (Compiler.GCC):'4.9', (Compiler.CLANG):'3.6' ], platform:9 ),
     new Toolchain( name:'arm64', fullName:'aarch64-linux-android', commandPrefix:'aarch64-linux-android', version:[ (Compiler.GCC):'4.9', (Compiler.CLANG):'3.6' ], platform:21 ),
     new Toolchain( name:'mips', fullName:'mipsel-linux-android', commandPrefix:'mipsel-linux-android', version:[ (Compiler.GCC):'4.9', (Compiler.CLANG):'3.6' ], platform:9 ),
     new Toolchain( name:'x86', fullName:'x86', commandPrefix:'i686-linux-android', version:[ (Compiler.GCC):'4.9', (Compiler.CLANG):'3.6' ], platform:9 ),
@@ -283,11 +283,12 @@ toolchains.each { toolchain ->
         description "Generate the NDK standalone toolchain for the ${toolchain.name.capitalize()} platform"
         outputs.dir file("${buildDir}/standalone-toolchains/${toolchain.name}")
         commandLine = [
-            "bash",
-            "${ndkDir}/build/tools/make-standalone-toolchain.sh",
-            "--platform=android-${toolchain.platform}",
+            "python",
+            "${ndkDir}/build/tools/make_standalone_toolchain.py",
+            "--api=${toolchain.platform}",
             "--install-dir=${buildDir}/standalone-toolchains/${toolchain.name}",
-            "--toolchain=${toolchain.fullName}-${clang?'clang':toolchain.version[Compiler.GCC]}"
+            "--arch=${toolchain.name}",
+            "--force"
         ]
     }
 }
